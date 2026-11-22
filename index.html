@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -55,8 +54,6 @@ button.secondary { background: #475569; }
 button.gallery-button { background: #7c3aed; }
 #imagePicker { display: none; }
 
-/* GALERI */
-
 #galleryPanel {
   display: none;
   width: 100%;
@@ -108,8 +105,6 @@ button.gallery-button { background: #7c3aed; }
   width: 100%;
   background: #475569;
 }
-
-/* PUZZLE */
 
 #puzzle {
   width: 100%;
@@ -167,8 +162,6 @@ button.gallery-button { background: #7c3aed; }
 }
 
 .credit a { color: #93c5fd; }
-
-/* GIF JUMPSCARE */
 
 #victoryOverlay {
   position: fixed;
@@ -256,8 +249,6 @@ button.gallery-button { background: #7c3aed; }
 
 </div>
 
-<!-- GALERI -->
-
 <div id="galleryPanel">
   <h3 class="gallery-title">Pilih Gambar Favoritmu</h3>
   <div class="gallery-grid" id="galleryGrid"></div>
@@ -286,8 +277,6 @@ button.gallery-button { background: #7c3aed; }
   (AtilaTheHun, CC BY 2.0).
 </p>
 
-<!-- GIF KEJUTAN -->
-
 <div id="victoryOverlay" aria-hidden="true">
 
   <img
@@ -314,7 +303,7 @@ const backToGame = document.getElementById("backToGame");
 const galleryPanel = document.getElementById("galleryPanel");
 const galleryGrid = document.getElementById("galleryGrid");
 
-/* 20 GAMBAR */
+/* GALERI GAMBAR */
 
 const galleryImages = [
   {
@@ -362,15 +351,15 @@ const galleryImages = [
     url: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=700"
   },
   {
-    name: "messi",
+    name: "Messi",
     url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0c/Lionel_Messi_16_June_2018.jpg/250px-Lionel_Messi_16_June_2018.jpg"
   },
   {
-    name: "patrick",
+    name: "Patrick",
     url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/28/Patrick_Star_character.png/250px-Patrick_Star_character.png"
   },
   {
-    name: "puan",
+    name: "Puan",
     url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cd/Puan_Maharani%2C_Ketua_DPR-RI_%282024%E2%80%932029%29.jpg/960px-Puan_Maharani%2C_Ketua_DPR-RI_%282024%E2%80%932029%29.jpg"
   },
   {
@@ -378,7 +367,7 @@ const galleryImages = [
     url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/51/Prabowo_Subianto_in_July_2026.jpg/250px-Prabowo_Subianto_in_July_2026.jpg"
   },
   {
-    name: "roysuryo",
+    name: "RoySuryo",
     url: "https://upload.wikimedia.org/wikipedia/commons/f/fb/Roy_Suryo_Demokrat.jpg"
   },
   {
@@ -386,15 +375,15 @@ const galleryImages = [
     url: "https://upload.wikimedia.org/wikipedia/commons/5/5f/Vice_President_Megawati_Sukarnoputri_of_Indonesia.jpg"
   },
   {
-    name: "gibran",
+    name: "Gibran",
     url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/21/Gibran_Rakabuming_Raka%2C_Candidate_for_Vice_President_of_Indonesia_2024.jpg/500px-Gibran_Rakabuming_Raka%2C_Candidate_for_Vice_President_of_Indonesia_2024.jpg"
   },
   {
-    name: "prabowo2",
+    name: "Prabowo2",
     url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d8/Prabowo_Subianto%2C_Candidate_for_Indonesia%27s_President_in_2024.jpg/500px-Prabowo_Subianto%2C_Candidate_for_Indonesia%27s_President_in_2024.jpg"
   },
   {
-    name: "jokowi2",
+    name: "Jokowi2",
     url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b1/Joko_Widodo%2C_36th_honorary_members_of_the_Indonesian_Marine_Corps.jpg/500px-Joko_Widodo%2C_36th_honorary_members_of_the_Indonesian_Marine_Corps.jpg"
   }
 ];
@@ -417,24 +406,30 @@ let victoryShown = false;
 
 const soundEffects = {
   ronaldo: new Audio("ronaldo-siuu.mp3"),
+
+  jokowi1: new Audio("jokowi1.mp3"),
   jokowi2: new Audio("jokowi-saya-akan-lawan.mp3"),
+
   gibran: new Audio("Gibran.mp3.mp3"),
+
   prabowo1: new Audio("hey-antek-antek-asing-prabowo.mp3"),
   prabowo2: new Audio("Prabowo.mp3"),
-  roysuryo: new Audio("Roy%20Suryo.mp3")
-  messi:new Audio("que-miras-bobo-lprtv.mp3"),
-  puan:new Audio("soliidd.mp3"),
-  
+
+  roysuryo: new Audio("Roy Suryo.mp3"),
+
+  messi: new Audio("que-miras-bobo-lprtv.mp3"),
+  puan: new Audio("soliidd.mp3")
 };
 
-/* PUTAR SUARA SESUAI FOTO */
+/* PUTAR SUARA SESUAI GAMBAR */
 
 function playMoveSound() {
 
   if (selectedGalleryIndex < 0) return;
 
   const selectedName = galleryImages[selectedGalleryIndex]
-    .name.toLowerCase()
+    .name
+    .toLowerCase()
     .replace(/\s+/g, "");
 
   const sound = soundEffects[selectedName];
@@ -456,6 +451,368 @@ function createGallery() {
   galleryGrid.innerHTML = "";
 
   galleryImages.forEach((image, index) => {
+
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "gallery-item";
+
+    if (index === selectedGalleryIndex) {
+      item.classList.add("selected");
+    }
+
+    const img = document.createElement("img");
+    img.src = image.url;
+    img.alt = image.name;
+    img.loading = "lazy";
+
+    img.onerror = () => {
+      img.alt = "Gambar gagal dimuat";
+      img.style.background = "#64748b";
+    };
+
+    const name = document.createElement("span");
+    name.textContent = image.name;
+
+    item.appendChild(img);
+    item.appendChild(name);
+
+    item.addEventListener("click", () => {
+      selectGalleryImage(index);
+    });
+
+    galleryGrid.appendChild(item);
+  });
+}
+
+function toggleGallery() {
+  galleryPanel.classList.toggle("show");
+}
+
+function selectGalleryImage(index) {
+
+  const selectedImage = galleryImages[index];
+  const testImage = new Image();
+
+  message.textContent = "Memuat gambar...";
+
+  testImage.onload = () => {
+
+    if (previousObjectUrl) {
+      URL.revokeObjectURL(previousObjectUrl);
+      previousObjectUrl = null;
+    }
+
+    currentImage = selectedImage.url;
+    selectedGalleryIndex = index;
+
+    galleryPanel.classList.remove("show");
+
+    shufflePuzzle();
+    createGallery();
+  };
+
+  testImage.onerror = () => {
+    message.textContent =
+      "Gambar gagal dimuat. Periksa koneksi internet.";
+  };
+
+  testImage.src = selectedImage.url;
+}
+
+/* WAKTU */
+
+function formatTime(value) {
+
+  const minutes = Math.floor(value / 60)
+    .toString().padStart(2, "0");
+
+  const secs = (value % 60)
+    .toString().padStart(2, "0");
+
+  return minutes + ":" + secs;
+}
+
+function updateInfo() {
+  stepsDisplay.textContent = steps;
+  timeDisplay.textContent = formatTime(seconds);
+}
+
+/* TIMER */
+
+function startTimer() {
+
+  if (started) return;
+
+  started = true;
+
+  timer = setInterval(() => {
+    seconds++;
+    updateInfo();
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timer);
+  timer = null;
+}
+
+/* RESET STATISTIK */
+
+function resetStats() {
+
+  stopTimer();
+
+  steps = 0;
+  seconds = 0;
+  started = false;
+
+  updateInfo();
+  message.textContent = "";
+}
+
+/* TAMPILKAN PUZZLE */
+
+function drawPuzzle() {
+
+  puzzle.innerHTML = "";
+
+  tiles.forEach((value, index) => {
+
+    const tile = document.createElement("div");
+
+    tile.className = value === 0
+      ? "tile empty"
+      : "tile";
+
+    if (value !== 0) {
+
+      const row = Math.floor((value - 1) / 3);
+      const col = (value - 1) % 3;
+
+      tile.style.backgroundImage =
+        `url("${currentImage}")`;
+
+      tile.style.backgroundPosition =
+        `${col * 50}% ${row * 50}%`;
+
+      tile.setAttribute("role", "button");
+      tile.setAttribute("aria-label", `Potongan ${value}`);
+
+      tile.addEventListener("click", () => {
+        moveTile(index);
+      });
+    }
+
+    puzzle.appendChild(tile);
+  });
+}
+
+/* CEK POSISI */
+
+function areAdjacent(indexA, indexB) {
+
+  const rowA = Math.floor(indexA / 3);
+  const colA = indexA % 3;
+
+  const rowB = Math.floor(indexB / 3);
+  const colB = indexB % 3;
+
+  return Math.abs(rowA - rowB) +
+         Math.abs(colA - colB) === 1;
+}
+
+/* PINDAHKAN PUZZLE */
+
+function moveTile(index) {
+
+  if (victoryShown) return;
+
+  const emptyIndex = tiles.indexOf(0);
+
+  if (!areAdjacent(index, emptyIndex)) return;
+
+  playMoveSound();
+  startTimer();
+
+  [tiles[index], tiles[emptyIndex]] =
+  [tiles[emptyIndex], tiles[index]];
+
+  steps++;
+
+  updateInfo();
+  drawPuzzle();
+  checkWin();
+}
+
+/* KOTAK BERSEBELAHAN */
+
+function getAdjacentIndexes(index) {
+
+  const row = Math.floor(index / 3);
+  const col = index % 3;
+
+  const result = [];
+
+  if (row > 0) result.push(index - 3);
+  if (row < 2) result.push(index + 3);
+  if (col > 0) result.push(index - 1);
+  if (col < 2) result.push(index + 1);
+
+  return result;
+}
+
+/* ACAK PUZZLE */
+
+function shufflePuzzle() {
+
+  closeVictory();
+  resetStats();
+
+  tiles = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+
+  let previousEmpty = -1;
+
+  for (let i = 0; i < 200; i++) {
+
+    const emptyIndex = tiles.indexOf(0);
+    let choices = getAdjacentIndexes(emptyIndex);
+
+    if (choices.length > 1 && previousEmpty !== -1) {
+      choices = choices.filter(index =>
+        index !== previousEmpty
+      );
+    }
+
+    const chosenIndex =
+      choices[Math.floor(Math.random() * choices.length)];
+
+    [tiles[emptyIndex], tiles[chosenIndex]] =
+    [tiles[chosenIndex], tiles[emptyIndex]];
+
+    previousEmpty = emptyIndex;
+  }
+
+  drawPuzzle();
+}
+
+/* RESET PUZZLE */
+
+function resetPuzzle() {
+
+  closeVictory();
+  resetStats();
+
+  tiles = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+
+  drawPuzzle();
+}
+
+/* CEK KEMENANGAN */
+
+function checkWin() {
+
+  const solved = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+
+  if (tiles.every((value, index) =>
+      value === solved[index])) {
+
+    stopTimer();
+    started = true;
+
+    message.textContent = "Puzzle berhasil diselesaikan!";
+
+    showVictoryVideo();
+  }
+}
+
+/* TAMPILKAN GIF */
+
+function showVictoryVideo() {
+
+  victoryShown = true;
+
+  victoryOverlay.classList.add("show");
+  victoryOverlay.setAttribute("aria-hidden", "false");
+}
+
+/* KEMBALI KE GAME */
+
+function closeVictory() {
+
+  victoryShown = false;
+
+  victoryOverlay.classList.remove("show");
+  victoryOverlay.setAttribute("aria-hidden", "true");
+}
+
+backToGame.addEventListener("click", closeVictory);
+
+/* GANTI GAMBAR DARI HP */
+
+imagePicker.addEventListener("change", event => {
+
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    message.textContent = "Silakan pilih file gambar.";
+    return;
+  }
+
+  const newUrl = URL.createObjectURL(file);
+  const testImage = new Image();
+
+  testImage.onload = () => {
+
+    if (previousObjectUrl) {
+      URL.revokeObjectURL(previousObjectUrl);
+    }
+
+    previousObjectUrl = newUrl;
+    currentImage = newUrl;
+    selectedGalleryIndex = -1;
+
+    createGallery();
+    shufflePuzzle();
+  };
+
+  testImage.onerror = () => {
+
+    URL.revokeObjectURL(newUrl);
+
+    message.textContent =
+      "Gambar tidak dapat dibuka. Coba pilih gambar lain.";
+  };
+
+  testImage.src = newUrl;
+  imagePicker.value = "";
+});
+
+/* CEK GAMBAR DEFAULT */
+
+const defaultTest = new Image();
+
+defaultTest.onload = () => {
+  message.textContent = "";
+};
+
+defaultTest.onerror = () => {
+  message.textContent =
+    "Gambar Ronaldo gagal dimuat. Periksa koneksi internet.";
+};
+
+defaultTest.src = currentImage;
+
+/* MULAI GAME */
+
+createGallery();
+drawPuzzle();
+
+</script>
+
+</body>
+</html>lleryImages.forEach((image, index) => {
 
     const item = document.createElement("button");
     item.type = "button";
