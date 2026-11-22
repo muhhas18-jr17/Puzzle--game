@@ -7,9 +7,7 @@
 <title>Game Puzzle</title>
 
 <style>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -21,10 +19,7 @@ body {
   background: linear-gradient(135deg, #172554, #312e81, #111827);
 }
 
-h1 {
-  margin: 8px 0 18px;
-  font-size: 30px;
-}
+h1 { margin: 8px 0 18px; font-size: 30px; }
 
 .info {
   display: flex;
@@ -55,17 +50,66 @@ button {
   cursor: pointer;
 }
 
-button:active {
-  transform: scale(.97);
+button:active { transform: scale(.97); }
+button.secondary { background: #475569; }
+button.gallery-button { background: #7c3aed; }
+#imagePicker { display: none; }
+
+/* GALERI */
+
+#galleryPanel {
+  display: none;
+  width: 100%;
+  max-width: 460px;
+  margin: 18px auto;
+  padding: 14px;
+  background: #ffffff12;
+  border: 1px solid #ffffff40;
+  border-radius: 12px;
 }
 
-button.secondary {
+#galleryPanel.show { display: block; }
+.gallery-title { margin: 0 0 12px; font-size: 18px; }
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+}
+
+.gallery-item {
+  min-width: 0;
+  padding: 4px;
+  background: #334155;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.gallery-item.selected { border-color: #facc15; }
+
+.gallery-item img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.gallery-item span {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.gallery-close {
+  margin-top: 12px;
+  width: 100%;
   background: #475569;
 }
 
-#imagePicker {
-  display: none;
-}
+/* PUZZLE */
 
 #puzzle {
   width: 100%;
@@ -115,7 +159,16 @@ button.secondary {
   line-height: 1.5;
 }
 
-/* VIDEO KEJUTAN FULL SCREEN */
+.credit {
+  max-width: 460px;
+  margin: 12px auto;
+  color: #cbd5e1;
+  font-size: 11px;
+}
+
+.credit a { color: #93c5fd; }
+
+/* GIF JUMPSCARE */
 
 #victoryOverlay {
   position: fixed;
@@ -141,13 +194,13 @@ button.secondary {
   pointer-events: auto;
 }
 
-#victoryFrame {
+#victoryGif {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  object-fit: cover;
   display: block;
-  border: 0;
   background: black;
 }
 
@@ -180,8 +233,14 @@ button.secondary {
 
 <div class="controls">
 
-  <button type="button" onclick="document.getElementById('imagePicker').click()">
-    Ganti Gambar
+  <button type="button" class="gallery-button"
+  onclick="toggleGallery()">
+    🖼️ Pilih Gambar Puzzle
+  </button>
+
+  <button type="button"
+  onclick="document.getElementById('imagePicker').click()">
+    Gambar dari HP
   </button>
 
   <input type="file" id="imagePicker" accept="image/*">
@@ -190,33 +249,52 @@ button.secondary {
     Acak Puzzle
   </button>
 
-  <button type="button" class="secondary" onclick="resetPuzzle()">
+  <button type="button" class="secondary"
+  onclick="resetPuzzle()">
     Reset
   </button>
 
 </div>
 
-<div id="puzzle"></div>
+<!-- GALERI -->
 
+<div id="galleryPanel">
+  <h3 class="gallery-title">Pilih Gambar Favoritmu</h3>
+  <div class="gallery-grid" id="galleryGrid"></div>
+
+  <button class="gallery-close" type="button"
+  onclick="toggleGallery()">
+    Tutup Galeri
+  </button>
+</div>
+
+<div id="puzzle"></div>
 <div id="message"></div>
 
 <p class="hint">
-  Susun kembali potongan gambar dengan mengetuk bagian yang berada tepat di sebelah kotak kosong.
+  Susun kembali potongan gambar dengan mengetuk bagian
+  yang berada tepat di sebelah kotak kosong.
   Selesaikan puzzle untuk melihat kejutan!
 </p>
 
-<!-- VIDEO JUMPSHARE -->
+<p class="credit">
+  Foto Ronaldo:
+  <a href="https://commons.wikimedia.org/wiki/File:Cristiano_Ronaldo.jpg"
+  target="_blank" rel="noopener">
+    Wikimedia Commons
+  </a>
+  (AtilaTheHun, CC BY 2.0).
+</p>
+
+<!-- GIF KEJUTAN -->
 
 <div id="victoryOverlay" aria-hidden="true">
 
-  <iframe
-    id="victoryFrame"
-    src="https://jumpshare.com/embed/VviFBimJjMp2L4ZSYdUC"
-    title="Video kejutan kemenangan"
-    allow="autoplay; fullscreen; picture-in-picture"
-    allowfullscreen
-    frameborder="0">
-  </iframe>
+  <img
+    id="victoryGif"
+    src="jumpscare.gif"
+    alt="Jumpscare"
+  >
 
   <button id="backToGame" type="button">
     ↩ Kembali ke Game Puzzle
@@ -233,10 +311,99 @@ const message = document.getElementById("message");
 const imagePicker = document.getElementById("imagePicker");
 const victoryOverlay = document.getElementById("victoryOverlay");
 const backToGame = document.getElementById("backToGame");
+const galleryPanel = document.getElementById("galleryPanel");
+const galleryGrid = document.getElementById("galleryGrid");
 
-const defaultImage = "https://i.ibb.co.com/Mx5sh0vb/images.jpg";
+/* 20 GAMBAR */
 
-let currentImage = defaultImage;
+const galleryImages = [
+  {
+    name: "Ronaldo",
+    url: "https://commons.wikimedia.org/wiki/Special:FilePath/Cristiano_Ronaldo.jpg?width=1200"
+  },
+  {
+    name: "Alam 1",
+    url: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=700"
+  },
+  {
+    name: "Alam 2",
+    url: "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=700"
+  },
+  {
+    name: "Alam 3",
+    url: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=700"
+  },
+  {
+    name: "Alam 4",
+    url: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=700"
+  },
+  {
+    name: "Kucing 1",
+    url: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=700"
+  },
+  {
+    name: "Kucing 2",
+    url: "https://images.unsplash.com/photo-1533738363-b7f9aef128ce?w=700"
+  },
+  {
+    name: "Anjing 1",
+    url: "https://images.unsplash.com/photo-1552053831-71594a27632d?w=700"
+  },
+  {
+    name: "Anjing 2",
+    url: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=700"
+  },
+  {
+    name: "Sepak Bola 1",
+    url: "https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=700"
+  },
+  {
+    name: "Sepak Bola 2",
+    url: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=700"
+  },
+  {
+    name: "Sepak Bola 3",
+    url: "https://images.unsplash.com/photo-1518091043644-c1d4457512c6?w=700"
+  },
+  {
+    name: "Sepak Bola 4",
+    url: "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=700"
+  },
+  {
+    name: "Mobil 1",
+    url: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=700"
+  },
+  {
+    name: "Mobil 2",
+    url: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=700"
+  },
+  {
+    name: "roysuryo",
+    url: "https://upload.wikimedia.org/wikipedia/commons/f/fb/Roy_Suryo_Demokrat.jpg"
+  },
+  {
+    name: "Megawati",
+    url: "https://upload.wikimedia.org/wikipedia/commons/5/5f/Vice_President_Megawati_Sukarnoputri_of_Indonesia.jpg"
+  },
+  {
+    name: "gibran",
+    url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/21/Gibran_Rakabuming_Raka%2C_Candidate_for_Vice_President_of_Indonesia_2024.jpg/500px-Gibran_Rakabuming_Raka%2C_Candidate_for_Vice_President_of_Indonesia_2024.jpg"
+  },
+  {
+    name: "prabowo",
+    url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d8/Prabowo_Subianto%2C_Candidate_for_Indonesia%27s_President_in_2024.jpg/500px-Prabowo_Subianto%2C_Candidate_for_Indonesia%27s_President_in_2024.jpg"
+  },
+  {
+    name: "jokowi",
+    url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b1/Joko_Widodo%2C_36th_honorary_members_of_the_Indonesian_Marine_Corps.jpg/500px-Joko_Widodo%2C_36th_honorary_members_of_the_Indonesian_Marine_Corps.jpg"
+  }
+];
+
+/* GAMBAR DEFAULT */
+
+let currentImage = galleryImages[0].url;
+let selectedGalleryIndex = 0;
+
 let tiles = [1, 2, 3, 4, 5, 6, 7, 8, 0];
 
 let steps = 0;
@@ -246,28 +413,137 @@ let started = false;
 let previousObjectUrl = null;
 let victoryShown = false;
 
+/* EFEK SUARA */
 
-// FORMAT WAKTU
+const soundEffects = {
+  ronaldo: new Audio("ronaldo-siuu.mp3"),
+  jokowi: new Audio("jokowi-saya-akan-lawan.mp3"),
+  gibran: new Audio("Gibran.mp3.mp3"),
+  prabowo: new Audio("Prabowo.mp3"),
+  roysuryo: new Audio("Roy%20Suryo.mp3")
+};
+
+/* PUTAR SUARA SESUAI FOTO */
+
+function playMoveSound() {
+
+  if (selectedGalleryIndex < 0) return;
+
+  const selectedName = galleryImages[selectedGalleryIndex]
+    .name.toLowerCase()
+    .replace(/\s+/g, "");
+
+  const sound = soundEffects[selectedName];
+
+  if (!sound) return;
+
+  sound.pause();
+  sound.currentTime = 0;
+
+  sound.play().catch(error => {
+    console.log("Suara gagal diputar:", error);
+  });
+}
+
+/* GALERI */
+
+function createGallery() {
+
+  galleryGrid.innerHTML = "";
+
+  galleryImages.forEach((image, index) => {
+
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "gallery-item";
+
+    if (index === selectedGalleryIndex) {
+      item.classList.add("selected");
+    }
+
+    const img = document.createElement("img");
+    img.src = image.url;
+    img.alt = image.name;
+    img.loading = "lazy";
+
+    img.onerror = () => {
+      img.alt = "Gambar gagal dimuat";
+      img.style.background = "#64748b";
+    };
+
+    const name = document.createElement("span");
+    name.textContent = image.name;
+
+    item.appendChild(img);
+    item.appendChild(name);
+
+    item.addEventListener("click", () => {
+      selectGalleryImage(index);
+    });
+
+    galleryGrid.appendChild(item);
+
+  });
+}
+
+function toggleGallery() {
+  galleryPanel.classList.toggle("show");
+}
+
+function selectGalleryImage(index) {
+
+  const selectedImage = galleryImages[index];
+  const testImage = new Image();
+
+  message.textContent = "Memuat gambar...";
+
+  testImage.onload = () => {
+
+    if (previousObjectUrl) {
+      URL.revokeObjectURL(previousObjectUrl);
+      previousObjectUrl = null;
+    }
+
+    currentImage = selectedImage.url;
+    selectedGalleryIndex = index;
+
+    galleryPanel.classList.remove("show");
+
+    shufflePuzzle();
+    createGallery();
+
+  };
+
+  testImage.onerror = () => {
+    message.textContent =
+      "Gambar gagal dimuat. Periksa koneksi internet.";
+  };
+
+  testImage.src = selectedImage.url;
+}
+
+/* WAKTU */
 
 function formatTime(value) {
-  const minutes = Math.floor(value / 60).toString().padStart(2, "0");
-  const secs = (value % 60).toString().padStart(2, "0");
+
+  const minutes = Math.floor(value / 60)
+    .toString().padStart(2, "0");
+
+  const secs = (value % 60)
+    .toString().padStart(2, "0");
 
   return minutes + ":" + secs;
 }
-
-
-// UPDATE INFORMASI
 
 function updateInfo() {
   stepsDisplay.textContent = steps;
   timeDisplay.textContent = formatTime(seconds);
 }
 
-
-// TIMER
+/* TIMER */
 
 function startTimer() {
+
   if (started) return;
 
   started = true;
@@ -283,10 +559,10 @@ function stopTimer() {
   timer = null;
 }
 
-
-// RESET STATISTIK
+/* RESET STATISTIK */
 
 function resetStats() {
+
   stopTimer();
 
   steps = 0;
@@ -297,24 +573,27 @@ function resetStats() {
   message.textContent = "";
 }
 
-
-// TAMPILKAN PUZZLE
+/* TAMPILKAN PUZZLE */
 
 function drawPuzzle() {
+
   puzzle.innerHTML = "";
 
   tiles.forEach((value, index) => {
 
     const tile = document.createElement("div");
 
-    tile.className = value === 0 ? "tile empty" : "tile";
+    tile.className = value === 0
+      ? "tile empty"
+      : "tile";
 
     if (value !== 0) {
 
       const row = Math.floor((value - 1) / 3);
       const col = (value - 1) % 3;
 
-      tile.style.backgroundImage = `url("${currentImage}")`;
+      tile.style.backgroundImage =
+        `url("${currentImage}")`;
 
       tile.style.backgroundPosition =
         `${col * 50}% ${row * 50}%`;
@@ -322,7 +601,9 @@ function drawPuzzle() {
       tile.setAttribute("role", "button");
       tile.setAttribute("aria-label", `Potongan ${value}`);
 
-      tile.addEventListener("click", () => moveTile(index));
+      tile.addEventListener("click", () => {
+        moveTile(index);
+      });
     }
 
     puzzle.appendChild(tile);
@@ -330,8 +611,7 @@ function drawPuzzle() {
   });
 }
 
-
-// CEK POSISI BERSEBELAHAN
+/* CEK POSISI */
 
 function areAdjacent(indexA, indexB) {
 
@@ -345,8 +625,7 @@ function areAdjacent(indexA, indexB) {
          Math.abs(colA - colB) === 1;
 }
 
-
-// PINDAHKAN PUZZLE
+/* PINDAHKAN PUZZLE */
 
 function moveTile(index) {
 
@@ -356,6 +635,7 @@ function moveTile(index) {
 
   if (!areAdjacent(index, emptyIndex)) return;
 
+  playMoveSound();
   startTimer();
 
   [tiles[index], tiles[emptyIndex]] =
@@ -366,11 +646,9 @@ function moveTile(index) {
   updateInfo();
   drawPuzzle();
   checkWin();
-
 }
 
-
-// CARI KOTAK BERSEBELAHAN
+/* KOTAK BERSEBELAHAN */
 
 function getAdjacentIndexes(index) {
 
@@ -387,8 +665,7 @@ function getAdjacentIndexes(index) {
   return result;
 }
 
-
-// ACAK PUZZLE
+/* ACAK PUZZLE */
 
 function shufflePuzzle() {
 
@@ -402,11 +679,12 @@ function shufflePuzzle() {
   for (let i = 0; i < 200; i++) {
 
     const emptyIndex = tiles.indexOf(0);
-
     let choices = getAdjacentIndexes(emptyIndex);
 
     if (choices.length > 1 && previousEmpty !== -1) {
-      choices = choices.filter(index => index !== previousEmpty);
+      choices = choices.filter(index =>
+        index !== previousEmpty
+      );
     }
 
     const chosenIndex =
@@ -421,8 +699,7 @@ function shufflePuzzle() {
   drawPuzzle();
 }
 
-
-// RESET PUZZLE
+/* RESET PUZZLE */
 
 function resetPuzzle() {
 
@@ -434,59 +711,47 @@ function resetPuzzle() {
   drawPuzzle();
 }
 
-
-// CEK KEMENANGAN
+/* CEK KEMENANGAN */
 
 function checkWin() {
 
   const solved = [1, 2, 3, 4, 5, 6, 7, 8, 0];
 
-  if (tiles.every((value, index) => value === solved[index])) {
+  if (tiles.every((value, index) =>
+      value === solved[index])) {
 
     stopTimer();
     started = true;
 
+    message.textContent = "Puzzle berhasil diselesaikan!";
+
     showVictoryVideo();
   }
-
 }
 
-
-// TAMPILKAN VIDEO KEJUTAN
+/* TAMPILKAN GIF */
 
 function showVictoryVideo() {
 
   victoryShown = true;
 
   victoryOverlay.classList.add("show");
-
   victoryOverlay.setAttribute("aria-hidden", "false");
-
 }
 
-
-// KEMBALI KE GAME
+/* KEMBALI KE GAME */
 
 function closeVictory() {
 
   victoryShown = false;
 
   victoryOverlay.classList.remove("show");
-
   victoryOverlay.setAttribute("aria-hidden", "true");
-
-  // Muat ulang video agar siap diputar lagi nanti
-
-  const frame = document.getElementById("victoryFrame");
-
-  frame.src = "https://jumpshare.com/embed/VviFBimJjMp2L4ZSYdUC";
-
 }
 
 backToGame.addEventListener("click", closeVictory);
 
-
-// GANTI GAMBAR DARI GALERI
+/* GANTI GAMBAR DARI HP */
 
 imagePicker.addEventListener("change", event => {
 
@@ -500,7 +765,6 @@ imagePicker.addEventListener("change", event => {
   }
 
   const newUrl = URL.createObjectURL(file);
-
   const testImage = new Image();
 
   testImage.onload = () => {
@@ -511,9 +775,10 @@ imagePicker.addEventListener("change", event => {
 
     previousObjectUrl = newUrl;
     currentImage = newUrl;
+    selectedGalleryIndex = -1;
 
+    createGallery();
     shufflePuzzle();
-
   };
 
   testImage.onerror = () => {
@@ -522,54 +787,37 @@ imagePicker.addEventListener("change", event => {
 
     message.textContent =
       "Gambar tidak dapat dibuka. Coba pilih gambar lain.";
-
   };
 
   testImage.src = newUrl;
-
   imagePicker.value = "";
-
 });
 
-
-// CEK GAMBAR BAWAAN
+/* CEK GAMBAR DEFAULT */
 
 const defaultTest = new Image();
-
-defaultTest.onerror = () => {
-
-  message.textContent =
-    "Gambar bawaan tidak berhasil dimuat. Tekan Ganti Gambar untuk memilih gambar dari galeri.";
-
-};
 
 defaultTest.onload = () => {
   message.textContent = "";
 };
 
-defaultTest.src = defaultImage;
+defaultTest.onerror = () => {
+  message.textContent =
+    "Gambar Ronaldo gagal dimuat. Periksa koneksi internet.";
+};
 
+/* MULAI GAME */
 
-// MULAI GAME
+defaultTest.src = currentImage;
 
+createGallery();
 drawPuzzle();
 
 </script>
 
 </body>
 </html>
-, () => {
-      videoError.textContent = "Video tidak dapat dimuat. Link Jumpshare ini mungkin bukan URL video MP4 langsung.";
-    });
-
-    imagePicker.addEventListener("change", event => {
-      const file = event.target.files[0];
-      if (!file) return;
-      if (!file.type.startsWith("image/")) {
-        message.textContent = "Silakan pilih file gambar.";
-        return;
-      }
-      const newUrl = URL.createObjectURL(file);
+);
       const testImage = new Image();
       testImage.onload = () => {
         if (previousObjectUrl) URL.revokeObjectURL(previousObjectUrl);
