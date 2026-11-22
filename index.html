@@ -817,30 +817,4 @@ drawPuzzle();
 
 </body>
 </html>
-);
-      const testImage = new Image();
-      testImage.onload = () => {
-        if (previousObjectUrl) URL.revokeObjectURL(previousObjectUrl);
-        previousObjectUrl = newUrl;
-        currentImage = newUrl;
-        shufflePuzzle();
-      };
-      testImage.onerror = () => {
-        URL.revokeObjectURL(newUrl);
-        message.textContent = "Gambar tidak dapat dibuka. Coba pilih gambar lain.";
-      };
-      testImage.src = newUrl;
-      imagePicker.value = "";
-    });
 
-    const defaultTest = new Image();
-    defaultTest.onerror = () => {
-      message.textContent = "Gambar bawaan tidak berhasil dimuat. Tekan Ganti Gambar untuk memilih gambar dari galeri.";
-    };
-    defaultTest.onload = () => { message.textContent = ""; };
-    defaultTest.src = defaultImage;
-
-    drawPuzzle();
-  </script>
-</body>
-</html>
