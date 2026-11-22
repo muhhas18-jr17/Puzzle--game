@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Puzzle</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 22px 14px;
+      font-family: Arial, sans-serif;
+      color: #fff;
+      text-align: center;
+      background: linear-gradient(135deg, #172554, #312e81, #111827);
+    }
+
+    h1 {
+      margin: 8px 0 18px;
+      font-size: 30px;
+    }
+
+    .info {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin: 14px auto;
+      font-size: 17px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 18px auto 12px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 11px 16px;
+      color: #fff;
+      background: #2563eb;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:active {
+      transform: scale(.97);
+    }
+
+    button.secondary {
+      background: #475569;
+    }
+
+    #imagePicker {
+      display: none;
+    }
+
+    #puzzle {
+      width: 100%;
+      max-width: 460px;
+      margin: 16px auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      padding: 0;
+      border: 3px solid white;
+      border-radius: 5px;
+      overflow: hidden;
+      background: #fff;
+      touch-action: manipulation;
+    }
+
+    .tile {
+      width: 100%;
+      aspect-ratio: 1 / 0.85;
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      background-repeat: no-repeat;
+      background-size: 300% 300%;
+      cursor: pointer;
+    }
+
+    .tile.empty {
+      background: #111827;
+      cursor: default;
+    }
+
+    #message {
+      min-height: 28px;
+      margin: 12px auto;
+      color: #fde68a;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .hint {
+      max-width: 460px;
+      margin: 12px auto;
+      color: #dbeafe;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🧩 Game Puzzle</h1>
+
+  <div class="info">
+    <div>Langkah: <strong id="steps">0</strong></div>
+    <div>Waktu: <strong id="time">00:00</strong></div>
+  </div>
+
+  <div class="controls">
+    <button type="button" onclick="document.getElementById('imagePicker').click()">
+      Ganti Gambar
+    </button>
+    <input type="file" id="imagePicker" accept="image/*">
+
+    <button type="button" onclick="shufflePuzzle()">Acak Puzzle</button>
+    <button type="button" class="secondary" onclick="resetPuzzle()">Reset</button>
+  </div>
+
+  <div id="puzzle" aria-label="Papan puzzle 3 kali 3"></div>
+  <div id="message" aria-live="polite"></div>
+
+  <p class="hint">
+    Susun kembali potongan gambar dengan mengetuk bagian yang berada tepat di sebelah kotak kosong.
+    Selesaikan puzzle dalam langkah dan waktu sesedikit mungkin!
+  </p>
+
+  <script>
+    const puzzle = document.getElementById("puzzle");
+    const stepsDisplay = document.getElementById("steps");
+    const timeDisplay = document.getElementById("time");
+    const message = document.getElementById("message");
+    const imagePicker = document.getElementById("imagePicker");
+
+    const defaultImage = "https://i.ibb.co.com/Mx5sh0vb/images.jpg";
+    let currentImage = defaultImage;
+    let tiles = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+    let steps = 0;
+    let seconds = 0;
+    let timer = null;
+    let started = false;
+    let previousObjectUrl = null;
+
+    function formatTime(value) {
+      const minutes = Math.floor(value / 60).toString().padStart(2, "0");
+      const secs = (value % 60).toString().padStart(2, "0");
+      return minutes + ":" + secs;
+    }
+
+    function updateInfo() {
+      stepsDisplay.textContent = steps;
+      timeDisplay.textContent = formatTime(seconds);
+    }
+
+    function startTimer() {
+      if (started) return;
+      started = true;
+      timer = setInterval(() => {
+        seconds++;
+        updateInfo();
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timer);
+      timer = null;
+    }
+
+    function resetStats() {
+      stopTimer();
+      steps = 0;
+      seconds = 0;
+      started = false;
+      updateInfo();
+      message.textContent = "";
+    }
+
+    function drawPuzzle() {
+      puzzle.innerHTML = "";
+
+      tiles.forEach((value, index) => {
+        const tile = document.createElement("div");
+        tile.className = value === 0 ? "tile empty" : "tile";
+
+        if (value !== 0) {
+          const row = Math.floor((value - 1) / 3);
+          const col = (value - 1) % 3;
+
+          tile.style.backgroundImage = `url("${currentImage}")`;
+          tile.style.backgroundPosition = `${col * 50}% ${row * 50}%`;
+          tile.setAttribute("role", "button");
+          tile.setAttribute("aria-label", `Potongan ${value}`);
+          tile.addEventListener("click", () => moveTile(index));
+        }
+
+        puzzle.appendChild(tile);
+      });
+    }
+
+    function areAdjacent(indexA, indexB) {
+      const rowA = Math.floor(indexA / 3);
+      const colA = indexA % 3;
+      const rowB = Math.floor(indexB / 3);
+      const colB = indexB % 3;
+
+      return Math.abs(rowA - rowB) + Math.abs(colA - colB) === 1;
+    }
+
+    function moveTile(index) {
+      const emptyIndex = tiles.indexOf(0);
+
+      if (!areAdjacent(index, emptyIndex)) return;
+
+      startTimer();
+
+      [tiles[index], tiles[emptyIndex]] = [tiles[emptyIndex], tiles[index]];
+      steps++;
+      updateInfo();
+      drawPuzzle();
+      checkWin();
+    }
+
+    function getAdjacentIndexes(index) {
+      const row = Math.floor(index / 3);
+      const col = index % 3;
+      const result = [];
+
+      if (row > 0) result.push(index - 3);
+      if (row < 2) result.push(index + 3);
+      if (col > 0) result.push(index - 1);
+      if (col < 2) result.push(index + 1);
+
+      return result;
+    }
+
+    function shufflePuzzle() {
+      resetStats();
+      tiles = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+
+      // Mengacak dengan gerakan legal agar puzzle selalu bisa diselesaikan.
+      let previousEmpty = -1;
+
+      for (let i = 0; i < 200; i++) {
+        const emptyIndex = tiles.indexOf(0);
+        let choices = getAdjacentIndexes(emptyIndex);
+
+        if (choices.length > 1 && previousEmpty !== -1) {
+          choices = choices.filter(index => index !== previousEmpty);
+        }
+
+        const chosenIndex = choices[Math.floor(Math.random() * choices.length)];
+        [tiles[emptyIndex], tiles[chosenIndex]] = [tiles[chosenIndex], tiles[emptyIndex]];
+        previousEmpty = emptyIndex;
+      }
+
+      drawPuzzle();
+    }
+
+    function resetPuzzle() {
+      resetStats();
+      tiles = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+      drawPuzzle();
+    }
+
+    function checkWin() {
+      const solved = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+      if (tiles.every((value, index) => value === solved[index])) {
+        stopTimer();
+        started = true;
+        message.textContent = `🎉 Hebat! Puzzle selesai dalam ${steps} langkah dan ${formatTime(seconds)}.`;
+      }
+    }
+
+    imagePicker.addEventListener("change", event => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith("image/")) {
+        message.textContent = "Silakan pilih file gambar.";
+        return;
+      }
+
+      const newUrl = URL.createObjectURL(file);
+      const testImage = new Image();
+
+      testImage.onload = () => {
+        if (previousObjectUrl) {
+          URL.revokeObjectURL(previousObjectUrl);
+        }
+        previousObjectUrl = newUrl;
+        currentImage = newUrl;
+        shufflePuzzle();
+      };
+
+      testImage.onerror = () => {
+        URL.revokeObjectURL(newUrl);
+        message.textContent = "Gambar tidak dapat dibuka. Coba pilih gambar lain.";
+      };
+
+      testImage.src = newUrl;
+      imagePicker.value = "";
+    });
+
+    // Jika gambar default gagal dimuat, permainan tetap bisa dibuka.
+    const defaultTest = new Image();
+    defaultTest.onerror = () => {
+      message.textContent = "Gambar bawaan tidak berhasil dimuat. Tekan Ganti Gambar untuk memilih gambar dari galeri.";
+    };
+    defaultTest.onload = () => {
+      message.textContent = "";
+    };
+    defaultTest.src = defaultImage;
+
+    drawPuzzle();
+  </script>
+</body>
+</html>
