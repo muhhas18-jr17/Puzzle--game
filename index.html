@@ -812,6 +812,368 @@ drawPuzzle();
 </script>
 
 </body>
+</html>
+
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "gallery-item";
+
+    if (index === selectedGalleryIndex) {
+      item.classList.add("selected");
+    }
+
+    const img = document.createElement("img");
+    img.src = image.url;
+    img.alt = image.name;
+    img.loading = "lazy";
+
+    img.onerror = () => {
+      img.alt = "Gambar gagal dimuat";
+      img.style.background = "#64748b";
+    };
+
+    const name = document.createElement("span");
+    name.textContent = image.name;
+
+    item.appendChild(img);
+    item.appendChild(name);
+
+    item.addEventListener("click", () => {
+      selectGalleryImage(index);
+    });
+
+    galleryGrid.appendChild(item);
+  });
+}
+
+function toggleGallery() {
+  galleryPanel.classList.toggle("show");
+}
+
+function selectGalleryImage(index) {
+
+  const selectedImage = galleryImages[index];
+  const testImage = new Image();
+
+  message.textContent = "Memuat gambar...";
+
+  testImage.onload = () => {
+
+    if (previousObjectUrl) {
+      URL.revokeObjectURL(previousObjectUrl);
+      previousObjectUrl = null;
+    }
+
+    currentImage = selectedImage.url;
+    selectedGalleryIndex = index;
+
+    galleryPanel.classList.remove("show");
+
+    shufflePuzzle();
+    createGallery();
+  };
+
+  testImage.onerror = () => {
+    message.textContent =
+      "Gambar gagal dimuat. Periksa koneksi internet.";
+  };
+
+  testImage.src = selectedImage.url;
+}
+
+/* WAKTU */
+
+function formatTime(value) {
+
+  const minutes = Math.floor(value / 60)
+    .toString().padStart(2, "0");
+
+  const secs = (value % 60)
+    .toString().padStart(2, "0");
+
+  return minutes + ":" + secs;
+}
+
+function updateInfo() {
+  stepsDisplay.textContent = steps;
+  timeDisplay.textContent = formatTime(seconds);
+}
+
+/* TIMER */
+
+function startTimer() {
+
+  if (started) return;
+
+  started = true;
+
+  timer = setInterval(() => {
+    seconds++;
+    updateInfo();
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timer);
+  timer = null;
+}
+
+/* RESET STATISTIK */
+
+function resetStats() {
+
+  stopTimer();
+
+  steps = 0;
+  seconds = 0;
+  started = false;
+
+  updateInfo();
+  message.textContent = "";
+}
+
+/* TAMPILKAN PUZZLE */
+
+function drawPuzzle() {
+
+  puzzle.innerHTML = "";
+
+  tiles.forEach((value, index) => {
+
+    const tile = document.createElement("div");
+
+    tile.className = value === 0
+      ? "tile empty"
+      : "tile";
+
+    if (value !== 0) {
+
+      const row = Math.floor((value - 1) / 3);
+      const col = (value - 1) % 3;
+
+      tile.style.backgroundImage =
+        `url("${currentImage}")`;
+
+      tile.style.backgroundPosition =
+        `${col * 50}% ${row * 50}%`;
+
+      tile.setAttribute("role", "button");
+      tile.setAttribute("aria-label", `Potongan ${value}`);
+
+      tile.addEventListener("click", () => {
+        moveTile(index);
+      });
+    }
+
+    puzzle.appendChild(tile);
+  });
+}
+
+/* CEK POSISI */
+
+function areAdjacent(indexA, indexB) {
+
+  const rowA = Math.floor(indexA / 3);
+  const colA = indexA % 3;
+
+  const rowB = Math.floor(indexB / 3);
+  const colB = indexB % 3;
+
+  return Math.abs(rowA - rowB) +
+         Math.abs(colA - colB) === 1;
+}
+
+/* PINDAHKAN PUZZLE */
+
+function moveTile(index) {
+
+  if (victoryShown) return;
+
+  const emptyIndex = tiles.indexOf(0);
+
+  if (!areAdjacent(index, emptyIndex)) return;
+
+  playMoveSound();
+  startTimer();
+
+  [tiles[index], tiles[emptyIndex]] =
+  [tiles[emptyIndex], tiles[index]];
+
+  steps++;
+
+  updateInfo();
+  drawPuzzle();
+  checkWin();
+}
+
+/* KOTAK BERSEBELAHAN */
+
+function getAdjacentIndexes(index) {
+
+  const row = Math.floor(index / 3);
+  const col = index % 3;
+
+  const result = [];
+
+  if (row > 0) result.push(index - 3);
+  if (row < 2) result.push(index + 3);
+  if (col > 0) result.push(index - 1);
+  if (col < 2) result.push(index + 1);
+
+  return result;
+}
+
+/* ACAK PUZZLE */
+
+function shufflePuzzle() {
+
+  closeVictory();
+  resetStats();
+
+  tiles = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+
+  let previousEmpty = -1;
+
+  for (let i = 0; i < 200; i++) {
+
+    const emptyIndex = tiles.indexOf(0);
+    let choices = getAdjacentIndexes(emptyIndex);
+
+    if (choices.length > 1 && previousEmpty !== -1) {
+      choices = choices.filter(index =>
+        index !== previousEmpty
+      );
+    }
+
+    const chosenIndex =
+      choices[Math.floor(Math.random() * choices.length)];
+
+    [tiles[emptyIndex], tiles[chosenIndex]] =
+    [tiles[chosenIndex], tiles[emptyIndex]];
+
+    previousEmpty = emptyIndex;
+  }
+
+  drawPuzzle();
+}
+
+/* RESET PUZZLE */
+
+function resetPuzzle() {
+
+  closeVictory();
+  resetStats();
+
+  tiles = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+
+  drawPuzzle();
+}
+
+/* CEK KEMENANGAN */
+
+function checkWin() {
+
+  const solved = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+
+  if (tiles.every((value, index) =>
+      value === solved[index])) {
+
+    stopTimer();
+    started = true;
+
+    message.textContent = "Puzzle berhasil diselesaikan!";
+
+    showVictoryVideo();
+  }
+}
+
+/* TAMPILKAN GIF */
+
+function showVictoryVideo() {
+
+  victoryShown = true;
+
+  victoryOverlay.classList.add("show");
+  victoryOverlay.setAttribute("aria-hidden", "false");
+}
+
+/* KEMBALI KE GAME */
+
+function closeVictory() {
+
+  victoryShown = false;
+
+  victoryOverlay.classList.remove("show");
+  victoryOverlay.setAttribute("aria-hidden", "true");
+}
+
+backToGame.addEventListener("click", closeVictory);
+
+/* GANTI GAMBAR DARI HP */
+
+imagePicker.addEventListener("change", event => {
+
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    message.textContent = "Silakan pilih file gambar.";
+    return;
+  }
+
+  const newUrl = URL.createObjectURL(file);
+  const testImage = new Image();
+
+  testImage.onload = () => {
+
+    if (previousObjectUrl) {
+      URL.revokeObjectURL(previousObjectUrl);
+    }
+
+    previousObjectUrl = newUrl;
+    currentImage = newUrl;
+    selectedGalleryIndex = -1;
+
+    createGallery();
+    shufflePuzzle();
+  };
+
+  testImage.onerror = () => {
+
+    URL.revokeObjectURL(newUrl);
+
+    message.textContent =
+      "Gambar tidak dapat dibuka. Coba pilih gambar lain.";
+  };
+
+  testImage.src = newUrl;
+  imagePicker.value = "";
+});
+
+/* CEK GAMBAR DEFAULT */
+
+const defaultTest = new Image();
+
+defaultTest.onload = () => {
+  message.textContent = "";
+};
+
+defaultTest.onerror = () => {
+  message.textContent =
+    "Gambar Ronaldo gagal dimuat. Periksa koneksi internet.";
+};
+
+defaultTest.src = currentImage;
+
+/* MULAI GAME */
+
+createGallery();
+drawPuzzle();
+
+</script>
+
+</body>
 </html>lleryImages.forEach((image, index) => {
 
     const item = document.createElement("button");
