@@ -1,319 +1,564 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Game Puzzle</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; min-height: 100vh; padding: 22px 14px;
-      font-family: Arial, sans-serif; color: #fff; text-align: center;
-      background: linear-gradient(135deg, #172554, #312e81, #111827);
-    }
-    h1 { margin: 8px 0 18px; font-size: 30px; letter-spacing:10px;}
-    .info {
-      display: flex; justify-content: center; gap: 24px;
-      flex-wrap: wrap; margin: 14px auto; font-size: 17px;
-    }
-    .controls {
-      display: flex; justify-content: center; align-items: center;
-      gap: 10px; flex-wrap: wrap; margin: 18px auto 12px;
-    }
-    button {
-      border: 0; border-radius: 8px; padding: 11px 16px;
-      color: #fff; background: #2563eb; font-size: 15px;
-      font-weight: bold; cursor: pointer;
-    }
-    button:active { transform: scale(.97); }
-    button.secondary { background: #475569; }
-    #imagePicker { display: none; }
-    #puzzle {
-      width: 100%; max-width: 460px; margin: 16px auto;
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 0; padding: 0; border: 3px solid white;
-      border-radius: 5px; overflow: hidden; background: #fff;
-      touch-action: manipulation;
-    }
-    .tile {
-      width: 100%; aspect-ratio: 1 / 0.85; margin: 0; padding: 0;
-      border: none; border-radius: 0; background-repeat: no-repeat;
-      background-size: 300% 300%; cursor: pointer;
-    }
-    .tile.empty { background: #111827; cursor: default; }
-    #message {
-      min-height: 28px; margin: 12px auto;
-      color: #fde68a; font-size: 18px; font-weight: bold;
-    }
-    .hint {
-      max-width: 460px; margin: 12px auto; color: #dbeafe;
-      font-size: 13px; line-height: 1.5;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Puzzle</title>
 
-    /* Layar kejutan: video menutup seluruh layar */
-    #victoryOverlay {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      height: 100dvh;
-      z-index: 99999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      background: #000;
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-      transition: opacity .18s ease, visibility .18s ease;
-    }
-    #victoryOverlay.show {
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
-    }
-    #victoryVideo {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      display: block;
-      object-fit: cover;
-      background: #000;
-    }
-    #backToGame {
-      position: absolute;
-      z-index: 2;
-      left: 50%;
-      bottom: max(22px, env(safe-area-inset-bottom));
-      transform: translateX(-50%);
-      padding: 14px 22px;
-      border: 1px solid #ffffff88;
-      border-radius: 999px;
-      color: #fff;
-      background: #111827dd;
-      box-shadow: 0 4px 24px #000a;
-      white-space: nowrap;
-      font-size: 16px;
-    }
-    #videoError {
-      position: absolute;
-      z-index: 3;
-      top: 12px;
-      left: 12px;
-      right: 12px;
-      color: #fff;
-      font-size: 13px;
-      text-shadow: 0 1px 5px #000;
-      pointer-events: none;
-    }
-  </style>
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 22px 14px;
+  font-family: Arial, sans-serif;
+  color: white;
+  text-align: center;
+  background: linear-gradient(135deg, #172554, #312e81, #111827);
+}
+
+h1 {
+  margin: 8px 0 18px;
+  font-size: 30px;
+}
+
+.info {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin: 14px auto;
+  font-size: 17px;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 18px auto 12px;
+}
+
+button {
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 16px;
+  color: white;
+  background: #2563eb;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:active {
+  transform: scale(.97);
+}
+
+button.secondary {
+  background: #475569;
+}
+
+#imagePicker {
+  display: none;
+}
+
+#puzzle {
+  width: 100%;
+  max-width: 460px;
+  margin: 16px auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  padding: 0;
+  border: 3px solid white;
+  border-radius: 5px;
+  overflow: hidden;
+  background: white;
+  touch-action: manipulation;
+}
+
+.tile {
+  width: 100%;
+  aspect-ratio: 1 / 0.85;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background-repeat: no-repeat;
+  background-size: 300% 300%;
+  cursor: pointer;
+}
+
+.tile.empty {
+  background: #111827;
+  cursor: default;
+}
+
+#message {
+  min-height: 28px;
+  margin: 12px auto;
+  color: #fde68a;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.hint {
+  max-width: 460px;
+  margin: 12px auto;
+  color: #dbeafe;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* VIDEO KEJUTAN FULL SCREEN */
+
+#victoryOverlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: black;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .18s ease, visibility .18s ease;
+}
+
+#victoryOverlay.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+#victoryFrame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+  background: black;
+}
+
+#backToGame {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: max(22px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  padding: 14px 22px;
+  border: 1px solid #ffffff88;
+  border-radius: 999px;
+  color: white;
+  background: #111827dd;
+  box-shadow: 0 4px 24px #000a;
+  white-space: nowrap;
+  font-size: 16px;
+}
+</style>
 </head>
+
 <body>
-  <h1>🧩 GAME PUZZEL</h1>
 
-  <div class="info">
-    <div>Langkah: <strong id="steps">0</strong></div>
-    <div>Waktu: <strong id="time">00:00</strong></div>
-  </div>
+<h1>🧩 Game Puzzle</h1>
 
-  <div class="controls">
-    <button type="button" onclick="document.getElementById('imagePicker').click()">Ganti Gambar</button>
-    <input type="file" id="imagePicker" accept="image/*">
-    <button type="button" onclick="shufflePuzzle()">Acak Puzzle</button>
-    <button type="button" class="secondary" onclick="resetPuzzle()">Reset</button>
-  </div>
+<div class="info">
+  <div>Langkah: <strong id="steps">0</strong></div>
+  <div>Waktu: <strong id="time">00:00</strong></div>
+</div>
 
-  <div id="puzzle" aria-label="Papan puzzle 3 kali 3"></div>
-  <div id="message" aria-live="polite"></div>
-  <p class="hint">Susun kembali potongan gambar dengan mengetuk bagian yang berada tepat di sebelah kotak kosong. Selesaikan puzzle dalam langkah dan waktu sesedikit mungkin!</p>
+<div class="controls">
 
-  <div id="victoryOverlay" aria-hidden="true">
-    <video id="victoryVideo" playsinline preload="auto">
-      <source src="https://jumpshare.com/s/VviFBimJjMp2L4ZSYdUC+" type="video/mp4">
-    </video>
-    <div id="videoError"></div>
-    <button id="backToGame" type="button">↩ Kembali ke Game Puzzle</button>
-  </div>
+  <button type="button" onclick="document.getElementById('imagePicker').click()">
+    Ganti Gambar
+  </button>
 
-  <script>
-    const puzzle = document.getElementById("puzzle");
-    const stepsDisplay = document.getElementById("steps");
-    const timeDisplay = document.getElementById("time");
-    const message = document.getElementById("message");
-    const imagePicker = document.getElementById("imagePicker");
-    const victoryOverlay = document.getElementById("victoryOverlay");
-    const victoryVideo = document.getElementById("victoryVideo");
-    const videoError = document.getElementById("videoError");
-    const backToGame = document.getElementById("backToGame");
+  <input type="file" id="imagePicker" accept="image/*">
 
-    const defaultImage = "https://i.ibb.co.com/Mx5sh0vb/images.jpg";
-    let currentImage = defaultImage;
-    let tiles = [1, 2, 3, 4, 5, 6, 7, 8, 0];
-    let steps = 0;
-    let seconds = 0;
-    let timer = null;
-    let started = false;
-    let previousObjectUrl = null;
-    let victoryShown = false;
+  <button type="button" onclick="shufflePuzzle()">
+    Acak Puzzle
+  </button>
 
-    function formatTime(value) {
-      const minutes = Math.floor(value / 60).toString().padStart(2, "0");
-      const secs = (value % 60).toString().padStart(2, "0");
-      return minutes + ":" + secs;
+  <button type="button" class="secondary" onclick="resetPuzzle()">
+    Reset
+  </button>
+
+</div>
+
+<div id="puzzle"></div>
+
+<div id="message"></div>
+
+<p class="hint">
+  Susun kembali potongan gambar dengan mengetuk bagian yang berada tepat di sebelah kotak kosong.
+  Selesaikan puzzle untuk melihat kejutan!
+</p>
+
+<!-- VIDEO JUMPSHARE -->
+
+<div id="victoryOverlay" aria-hidden="true">
+
+  <iframe
+    id="victoryFrame"
+    src="https://jumpshare.com/embed/VviFBimJjMp2L4ZSYdUC"
+    title="Video kejutan kemenangan"
+    allow="autoplay; fullscreen; picture-in-picture"
+    allowfullscreen
+    frameborder="0">
+  </iframe>
+
+  <button id="backToGame" type="button">
+    ↩ Kembali ke Game Puzzle
+  </button>
+
+</div>
+
+<script>
+
+const puzzle = document.getElementById("puzzle");
+const stepsDisplay = document.getElementById("steps");
+const timeDisplay = document.getElementById("time");
+const message = document.getElementById("message");
+const imagePicker = document.getElementById("imagePicker");
+const victoryOverlay = document.getElementById("victoryOverlay");
+const backToGame = document.getElementById("backToGame");
+
+const defaultImage = "https://i.ibb.co.com/Mx5sh0vb/images.jpg";
+
+let currentImage = defaultImage;
+let tiles = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+
+let steps = 0;
+let seconds = 0;
+let timer = null;
+let started = false;
+let previousObjectUrl = null;
+let victoryShown = false;
+
+
+// FORMAT WAKTU
+
+function formatTime(value) {
+  const minutes = Math.floor(value / 60).toString().padStart(2, "0");
+  const secs = (value % 60).toString().padStart(2, "0");
+
+  return minutes + ":" + secs;
+}
+
+
+// UPDATE INFORMASI
+
+function updateInfo() {
+  stepsDisplay.textContent = steps;
+  timeDisplay.textContent = formatTime(seconds);
+}
+
+
+// TIMER
+
+function startTimer() {
+  if (started) return;
+
+  started = true;
+
+  timer = setInterval(() => {
+    seconds++;
+    updateInfo();
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timer);
+  timer = null;
+}
+
+
+// RESET STATISTIK
+
+function resetStats() {
+  stopTimer();
+
+  steps = 0;
+  seconds = 0;
+  started = false;
+
+  updateInfo();
+  message.textContent = "";
+}
+
+
+// TAMPILKAN PUZZLE
+
+function drawPuzzle() {
+  puzzle.innerHTML = "";
+
+  tiles.forEach((value, index) => {
+
+    const tile = document.createElement("div");
+
+    tile.className = value === 0 ? "tile empty" : "tile";
+
+    if (value !== 0) {
+
+      const row = Math.floor((value - 1) / 3);
+      const col = (value - 1) % 3;
+
+      tile.style.backgroundImage = `url("${currentImage}")`;
+
+      tile.style.backgroundPosition =
+        `${col * 50}% ${row * 50}%`;
+
+      tile.setAttribute("role", "button");
+      tile.setAttribute("aria-label", `Potongan ${value}`);
+
+      tile.addEventListener("click", () => moveTile(index));
     }
 
-    function updateInfo() {
-      stepsDisplay.textContent = steps;
-      timeDisplay.textContent = formatTime(seconds);
+    puzzle.appendChild(tile);
+
+  });
+}
+
+
+// CEK POSISI BERSEBELAHAN
+
+function areAdjacent(indexA, indexB) {
+
+  const rowA = Math.floor(indexA / 3);
+  const colA = indexA % 3;
+
+  const rowB = Math.floor(indexB / 3);
+  const colB = indexB % 3;
+
+  return Math.abs(rowA - rowB) +
+         Math.abs(colA - colB) === 1;
+}
+
+
+// PINDAHKAN PUZZLE
+
+function moveTile(index) {
+
+  if (victoryShown) return;
+
+  const emptyIndex = tiles.indexOf(0);
+
+  if (!areAdjacent(index, emptyIndex)) return;
+
+  startTimer();
+
+  [tiles[index], tiles[emptyIndex]] =
+  [tiles[emptyIndex], tiles[index]];
+
+  steps++;
+
+  updateInfo();
+  drawPuzzle();
+  checkWin();
+
+}
+
+
+// CARI KOTAK BERSEBELAHAN
+
+function getAdjacentIndexes(index) {
+
+  const row = Math.floor(index / 3);
+  const col = index % 3;
+
+  const result = [];
+
+  if (row > 0) result.push(index - 3);
+  if (row < 2) result.push(index + 3);
+  if (col > 0) result.push(index - 1);
+  if (col < 2) result.push(index + 1);
+
+  return result;
+}
+
+
+// ACAK PUZZLE
+
+function shufflePuzzle() {
+
+  closeVictory();
+  resetStats();
+
+  tiles = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+
+  let previousEmpty = -1;
+
+  for (let i = 0; i < 200; i++) {
+
+    const emptyIndex = tiles.indexOf(0);
+
+    let choices = getAdjacentIndexes(emptyIndex);
+
+    if (choices.length > 1 && previousEmpty !== -1) {
+      choices = choices.filter(index => index !== previousEmpty);
     }
 
-    function startTimer() {
-      if (started) return;
-      started = true;
-      timer = setInterval(() => {
-        seconds++;
-        updateInfo();
-      }, 1000);
+    const chosenIndex =
+      choices[Math.floor(Math.random() * choices.length)];
+
+    [tiles[emptyIndex], tiles[chosenIndex]] =
+    [tiles[chosenIndex], tiles[emptyIndex]];
+
+    previousEmpty = emptyIndex;
+  }
+
+  drawPuzzle();
+}
+
+
+// RESET PUZZLE
+
+function resetPuzzle() {
+
+  closeVictory();
+  resetStats();
+
+  tiles = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+
+  drawPuzzle();
+}
+
+
+// CEK KEMENANGAN
+
+function checkWin() {
+
+  const solved = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+
+  if (tiles.every((value, index) => value === solved[index])) {
+
+    stopTimer();
+    started = true;
+
+    showVictoryVideo();
+  }
+
+}
+
+
+// TAMPILKAN VIDEO KEJUTAN
+
+function showVictoryVideo() {
+
+  victoryShown = true;
+
+  victoryOverlay.classList.add("show");
+
+  victoryOverlay.setAttribute("aria-hidden", "false");
+
+}
+
+
+// KEMBALI KE GAME
+
+function closeVictory() {
+
+  victoryShown = false;
+
+  victoryOverlay.classList.remove("show");
+
+  victoryOverlay.setAttribute("aria-hidden", "true");
+
+  // Muat ulang video agar siap diputar lagi nanti
+
+  const frame = document.getElementById("victoryFrame");
+
+  frame.src = "https://jumpshare.com/embed/VviFBimJjMp2L4ZSYdUC";
+
+}
+
+backToGame.addEventListener("click", closeVictory);
+
+
+// GANTI GAMBAR DARI GALERI
+
+imagePicker.addEventListener("change", event => {
+
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    message.textContent = "Silakan pilih file gambar.";
+    return;
+  }
+
+  const newUrl = URL.createObjectURL(file);
+
+  const testImage = new Image();
+
+  testImage.onload = () => {
+
+    if (previousObjectUrl) {
+      URL.revokeObjectURL(previousObjectUrl);
     }
 
-    function stopTimer() {
-      clearInterval(timer);
-      timer = null;
-    }
+    previousObjectUrl = newUrl;
+    currentImage = newUrl;
 
-    function resetStats() {
-      stopTimer();
-      steps = 0;
-      seconds = 0;
-      started = false;
-      updateInfo();
-      message.textContent = "";
-    }
+    shufflePuzzle();
 
-    function drawPuzzle() {
-      puzzle.innerHTML = "";
-      tiles.forEach((value, index) => {
-        const tile = document.createElement("div");
-        tile.className = value === 0 ? "tile empty" : "tile";
-        if (value !== 0) {
-          const row = Math.floor((value - 1) / 3);
-          const col = (value - 1) % 3;
-          tile.style.backgroundImage = `url("${currentImage}")`;
-          tile.style.backgroundPosition = `${col * 50}% ${row * 50}%`;
-          tile.setAttribute("role", "button");
-          tile.setAttribute("aria-label", `Potongan ${value}`);
-          tile.addEventListener("click", () => moveTile(index));
-        }
-        puzzle.appendChild(tile);
-      });
-    }
+  };
 
-    function areAdjacent(indexA, indexB) {
-      const rowA = Math.floor(indexA / 3);
-      const colA = indexA % 3;
-      const rowB = Math.floor(indexB / 3);
-      const colB = indexB % 3;
-      return Math.abs(rowA - rowB) + Math.abs(colA - colB) === 1;
-    }
+  testImage.onerror = () => {
 
-    function moveTile(index) {
-      if (victoryShown) return;
-      const emptyIndex = tiles.indexOf(0);
-      if (!areAdjacent(index, emptyIndex)) return;
+    URL.revokeObjectURL(newUrl);
 
-      startTimer();
-      [tiles[index], tiles[emptyIndex]] = [tiles[emptyIndex], tiles[index]];
-      steps++;
-      updateInfo();
-      drawPuzzle();
-      checkWin();
-    }
+    message.textContent =
+      "Gambar tidak dapat dibuka. Coba pilih gambar lain.";
 
-    function getAdjacentIndexes(index) {
-      const row = Math.floor(index / 3);
-      const col = index % 3;
-      const result = [];
-      if (row > 0) result.push(index - 3);
-      if (row < 2) result.push(index + 3);
-      if (col > 0) result.push(index - 1);
-      if (col < 2) result.push(index + 1);
-      return result;
-    }
+  };
 
-    function shufflePuzzle() {
-      closeVictory();
-      resetStats();
-      tiles = [1, 2, 3, 4, 5, 6, 7, 8, 0];
-      let previousEmpty = -1;
+  testImage.src = newUrl;
 
-      for (let i = 0; i < 200; i++) {
-        const emptyIndex = tiles.indexOf(0);
-        let choices = getAdjacentIndexes(emptyIndex);
-        if (choices.length > 1 && previousEmpty !== -1) {
-          choices = choices.filter(index => index !== previousEmpty);
-        }
-        const chosenIndex = choices[Math.floor(Math.random() * choices.length)];
-        [tiles[emptyIndex], tiles[chosenIndex]] = [tiles[chosenIndex], tiles[emptyIndex]];
-        previousEmpty = emptyIndex;
-      }
-      drawPuzzle();
-    }
+  imagePicker.value = "";
 
-    function resetPuzzle() {
-      closeVictory();
-      resetStats();
-      tiles = [1, 2, 3, 4, 5, 6, 7, 8, 0];
-      drawPuzzle();
-    }
+});
 
-    function checkWin() {
-      const solved = [1, 2, 3, 4, 5, 6, 7, 8, 0];
-      if (tiles.every((value, index) => value === solved[index])) {
-        stopTimer();
-        started = true;
-        showVictoryVideo();
-      }
-    }
 
-    function showVictoryVideo() {
-      victoryShown = true;
-      victoryOverlay.classList.add("show");
-      victoryOverlay.setAttribute("aria-hidden", "false");
-      videoError.textContent = "";
-      victoryVideo.currentTime = 0;
+// CEK GAMBAR BAWAAN
 
-      // Coba putar otomatis dengan suara. Jika browser memblokirnya,
-      // minta pemain mengetuk layar untuk memulai video.
-      const playAttempt = victoryVideo.play();
-      if (playAttempt && typeof playAttempt.catch === "function") {
-        playAttempt.catch(() => {
-          videoError.textContent = "Ketuk layar untuk memutar video.";
-          victoryOverlay.addEventListener("click", startVideoFromTap, { once: true });
-        });
-      }
-    }
+const defaultTest = new Image();
 
-    function startVideoFromTap(event) {
-      if (event.target === backToGame) return;
-      videoError.textContent = "";
-      victoryVideo.play().catch(() => {
-        videoError.textContent = "Video tidak bisa diputar. Periksa link video.";
-      });
-    }
+defaultTest.onerror = () => {
 
-    function closeVictory() {
-      victoryShown = false;
-      victoryOverlay.classList.remove("show");
-      victoryOverlay.setAttribute("aria-hidden", "true");
-      victoryVideo.pause();
-      try { victoryVideo.currentTime = 0; } catch (error) {}
-    }
+  message.textContent =
+    "Gambar bawaan tidak berhasil dimuat. Tekan Ganti Gambar untuk memilih gambar dari galeri.";
 
-    backToGame.addEventListener("click", closeVictory);
+};
 
-    victoryVideo.addEventListener("error", () => {
+defaultTest.onload = () => {
+  message.textContent = "";
+};
+
+defaultTest.src = defaultImage;
+
+
+// MULAI GAME
+
+drawPuzzle();
+
+</script>
+
+</body>
+</html>
+, () => {
       videoError.textContent = "Video tidak dapat dimuat. Link Jumpshare ini mungkin bukan URL video MP4 langsung.";
     });
 
